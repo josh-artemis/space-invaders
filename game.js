@@ -380,6 +380,13 @@ function updateUI() {
     document.getElementById('lives').textContent = lives;
     document.getElementById('level').textContent = level;
     document.getElementById('playerName').textContent = playerName;
+    
+    // Update pause button icon
+    const pauseButton = document.getElementById('pauseButton');
+    if (pauseButton) {
+        pauseButton.textContent = isPaused ? '▶️' : '⏸️';
+        pauseButton.style.display = gameState === 'playing' ? 'inline-block' : 'none';
+    }
 }
 
 // Game loop
@@ -865,13 +872,20 @@ document.getElementById('startButton').addEventListener('click', startGame);
 document.getElementById('restartButton').addEventListener('click', startGame);
 document.getElementById('resumeButton').addEventListener('click', resumeGame);
 document.getElementById('nextLevelButton').addEventListener('click', startNextLevel);
+document.getElementById('pauseButton').addEventListener('click', togglePause);
 document.getElementById('musicToggle').addEventListener('click', toggleMusic);
 
-// Focus name input on page load
+// Focus name input on page load and initialize pause button
 window.addEventListener('load', () => {
     const nameInput = document.getElementById('playerNameInput');
     if (nameInput) {
         nameInput.focus();
+    }
+    
+    // Initialize pause button (hidden initially)
+    const pauseButton = document.getElementById('pauseButton');
+    if (pauseButton) {
+        pauseButton.style.display = 'none';
     }
 });
 
