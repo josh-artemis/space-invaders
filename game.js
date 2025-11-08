@@ -3,10 +3,12 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game state
-let gameState = 'start'; // 'start', 'playing', 'gameOver'
+let gameState = 'start'; // 'start', 'playing', 'paused', 'levelComplete', 'gameOver'
 let score = 0;
 let lives = 3;
 let level = 1;
+let playerName = 'Guest';
+let isPaused = false;
 
 // Audio setup
 let audioContext;
@@ -377,6 +379,7 @@ function updateUI() {
     document.getElementById('score').textContent = score;
     document.getElementById('lives').textContent = lives;
     document.getElementById('level').textContent = level;
+    document.getElementById('playerName').textContent = playerName;
 }
 
 // Game loop
@@ -388,7 +391,7 @@ function gameLoop() {
     // Draw stars background
     drawStars();
     
-    if (gameState === 'playing') {
+    if (gameState === 'playing' && !isPaused) {
         // Update player
         player.update();
         player.draw();
@@ -455,23 +458,135 @@ function gameLoop() {
         
         // Check win condition
         if (enemies.length === 0) {
-            // Level complete - advance to next level
-            level++;
-            score += 100 * level; // Bonus points for completing level
-            updateUI();
-            initGame();
+            // Level complete - show completion screen
+            levelComplete();
         }
+    } else if (gameState === 'playing' && isPaused) {
+        // Draw game objects but don't update them when paused
+        player.draw();
+        enemies.forEach(enemy => enemy.draw());
+        playerBullets.forEach(bullet => bullet.draw());
+        enemyBullets.forEach(bullet => bullet.draw());
     }
     
     requestAnimationFrame(gameLoop);
 }
 
+// Get funny level completion message
+function getLevelMessage(completedLevel) {
+    const messages = [
+        // Level 1
+        "You survived your first space battle! The aliens are NOT impressed.",
+        // Level 2
+        "Two levels down! Your ship is still in one piece... mostly.",
+        // Level 3
+        "Level 3 complete! The space invaders are starting to take you seriously.",
+        // Level 4
+        "You're still alive! The aliens are calling their friends now.",
+        // Level 5
+        "Halfway to legend! Your piloting skills are... adequate.",
+        // Level 6
+        "Level 6 conquered! The aliens are writing angry space letters.",
+        // Level 7
+        "Seven levels of survival! You're like a space cockroach - unkillable!",
+        // Level 8
+        "Level 8 done! The aliens are considering early retirement.",
+        // Level 9
+        "Nine levels of glory! You're making space look easy.",
+        // Level 10
+        "Double digits! The aliens have formed a support group.",
+        // Level 11+
+        "Another level down! You're basically a space legend now.",
+        "Still going! The aliens are questioning their life choices.",
+        "Unstoppable! The space invaders are filing complaints.",
+        "Level after level! You're the reason aliens have nightmares.",
+        "Incredible! The aliens are updating their resumes.",
+        "Amazing! You're single-handedly solving the alien problem.",
+        "Outstanding! The space invaders are considering a career change.",
+        "Phenomenal! You're making space look like a walk in the park.",
+        "Legendary! The aliens are starting to respect you... and fear you.",
+        "Unbelievable! You're the stuff of space legends!"
+    ];
+    
+    // Use specific message for levels 1-10, then cycle through the rest
+    if (completedLevel <= messages.length) {
+        return messages[completedLevel - 1];
+    } else {
+        // Cycle through messages 11-20 for higher levels
+        const index = 10 + ((completedLevel - 11) % 10);
+        return messages[index];
+    }
+}
+
+// Level complete function
+function levelComplete() {
+    gameState = 'levelComplete';
+    isPaused = false;
+    
+    // Calculate bonus points
+    const bonus = 100 * level;
+    score += bonus;
+    
+    // Update UI
+    updateUI();
+    
+    // Show level completion screen
+    document.getElementById('levelMessage').textContent = getLevelMessage(level);
+    document.getElementById('completedLevel').textContent = level;
+    document.getElementById('levelBonus').textContent = bonus;
+    document.getElementById('levelCompleteScreen').classList.remove('hidden');
+    
+    // Stop music during level transition
+    stopMusic();
+}
+
+// Start next level
+function startNextLevel() {
+    level++;
+    gameState = 'playing';
+    isPaused = false;
+    document.getElementById('levelCompleteScreen').classList.add('hidden');
+    initGame();
+    
+    // Resume music
+    if (musicEnabled) {
+        createSpaceMusic();
+    }
+}
+
+// Pause/Resume functions
+function pauseGame() {
+    if (gameState === 'playing' && !isPaused) {
+        isPaused = true;
+        document.getElementById('pauseScreen').classList.remove('hidden');
+    }
+}
+
+function resumeGame() {
+    if (gameState === 'playing' && isPaused) {
+        isPaused = false;
+        document.getElementById('pauseScreen').classList.add('hidden');
+    }
+}
+
+function togglePause() {
+    if (isPaused) {
+        resumeGame();
+    } else {
+        pauseGame();
+    }
+}
+
 // Game over
 function gameOver() {
     gameState = 'gameOver';
+    isPaused = false;
     document.getElementById('finalScore').textContent = score;
     document.getElementById('finalLevel').textContent = level;
+    document.getElementById('finalPlayerName').textContent = playerName;
     document.getElementById('gameOverScreen').classList.remove('hidden');
+    document.getElementById('pauseScreen').classList.add('hidden');
+    document.getElementById('levelCompleteScreen').classList.add('hidden');
     
     // Stop music on game over
     stopMusic();
@@ -678,10 +793,26 @@ function toggleMusic() {
 
 // Start game
 function startGame() {
+    // Get player name from input
+    const nameInput = document.getElementById('playerNameInput');
+    const inputName = nameInput.value.trim();
+    
+    // Use input name or default to "Guest"
+    if (inputName) {
+        playerName = inputName;
+    } else {
+        playerName = 'Guest';
+    }
+    
     gameState = 'playing';
+    isPaused = false;
+    score = 0;
+    lives = 3;
     level = 1; // Reset level when starting new game
     document.getElementById('startScreen').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
+    document.getElementById('pauseScreen').classList.add('hidden');
+    document.getElementById('levelCompleteScreen').classList.add('hidden');
     initGame();
     
     // Start music when game begins
@@ -697,9 +828,32 @@ document.addEventListener('keydown', (e) => {
     // Resume audio context on any user interaction
     resumeAudioContext();
     
-    if (e.key === ' ' && gameState === 'playing') {
+    // Pause/Resume with P key
+    if ((e.key === 'p' || e.key === 'P') && gameState === 'playing') {
+        e.preventDefault();
+        togglePause();
+        return;
+    }
+    
+    // Don't allow shooting when paused
+    if (e.key === ' ' && gameState === 'playing' && !isPaused) {
         e.preventDefault();
         player.shoot();
+    }
+    
+    // Allow Enter key to submit name and start game
+    if (e.key === 'Enter' && gameState === 'start') {
+        const nameInput = document.getElementById('playerNameInput');
+        if (document.activeElement === nameInput || !document.activeElement) {
+            e.preventDefault();
+            startGame();
+        }
+    }
+    
+    // Allow Enter or Space to continue to next level
+    if ((e.key === 'Enter' || e.key === ' ') && gameState === 'levelComplete') {
+        e.preventDefault();
+        startNextLevel();
     }
 });
 
@@ -709,7 +863,17 @@ document.addEventListener('keyup', (e) => {
 
 document.getElementById('startButton').addEventListener('click', startGame);
 document.getElementById('restartButton').addEventListener('click', startGame);
+document.getElementById('resumeButton').addEventListener('click', resumeGame);
+document.getElementById('nextLevelButton').addEventListener('click', startNextLevel);
 document.getElementById('musicToggle').addEventListener('click', toggleMusic);
+
+// Focus name input on page load
+window.addEventListener('load', () => {
+    const nameInput = document.getElementById('playerNameInput');
+    if (nameInput) {
+        nameInput.focus();
+    }
+});
 
 // Initialize stars, audio and start game loop
 initStars();

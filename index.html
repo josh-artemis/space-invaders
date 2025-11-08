@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,7 @@
     <div class="game-container">
         <div class="game-header">
             <div class="score-display">
+                <span>Player: <span id="playerName">Guest</span></span>
                 <span>Score: <span id="score">0</span></span>
                 <span>Level: <span id="level">1</span></span>
                 <span>Lives: <span id="lives">3</span></span>
@@ -22,8 +23,13 @@
         <div class="game-overlay" id="startScreen">
             <div class="overlay-content">
                 <h1>SPACE INVADERS</h1>
+                <div class="name-input-container">
+                    <label for="playerNameInput">Enter Your Name:</label>
+                    <input type="text" id="playerNameInput" placeholder="Player Name" maxlength="20" autocomplete="off">
+                </div>
                 <p>Use ← → arrow keys to move</p>
                 <p>Press SPACEBAR to shoot</p>
+                <p>Press P to pause</p>
                 <button id="startButton">Start Game</button>
             </div>
         </div>
@@ -31,9 +37,28 @@
         <div class="game-overlay hidden" id="gameOverScreen">
             <div class="overlay-content">
                 <h1>GAME OVER</h1>
+                <p><span id="finalPlayerName">Player</span></p>
                 <p>Final Score: <span id="finalScore">0</span></p>
                 <p>Level Reached: <span id="finalLevel">1</span></p>
                 <button id="restartButton">Play Again</button>
+            </div>
+        </div>
+        
+        <div class="game-overlay hidden" id="pauseScreen">
+            <div class="overlay-content">
+                <h1>PAUSED</h1>
+                <p>Press P to resume</p>
+                <button id="resumeButton">Resume Game</button>
+            </div>
+        </div>
+        
+        <div class="game-overlay hidden" id="levelCompleteScreen">
+            <div class="overlay-content">
+                <h1>LEVEL COMPLETE!</h1>
+                <p class="level-message" id="levelMessage">Great job surviving space!</p>
+                <p>Level <span id="completedLevel">1</span> Complete</p>
+                <p>Bonus: <span id="levelBonus">100</span> points</p>
+                <button id="nextLevelButton">Continue to Next Level</button>
             </div>
         </div>
     </div>

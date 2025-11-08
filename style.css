@@ -130,3 +130,47 @@ button:active {
     transform: scale(1.1);
 }
 
+.name-input-container {
+    margin: 20px 0;
+}
+
+.name-input-container label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #87ceeb;
+}
+
+.name-input-container input {
+    padding: 10px 15px;
+    font-size: 16px;
+    font-family: 'Courier New', monospace;
+    background: #000;
+    color: #87ceeb;
+    border: 2px solid #87ceeb;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.name-input-container input:focus {
+    box-shadow: 0 0 15px rgba(135, 206, 235, 0.6);
+    border-color: #87ceeb;
+}
+
+.name-input-container input::placeholder {
+    color: rgba(135, 206, 235, 0.5);
+}
+
+.level-message {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffff00;
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+    margin: 20px 0;
+    font-style: italic;
+}
+
