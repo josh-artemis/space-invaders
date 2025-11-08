@@ -2,6 +2,34 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Canvas dimensions (logical size)
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
+
+// Set canvas logical size
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
+
+// Responsive canvas sizing
+function resizeCanvas() {
+    const container = canvas.parentElement;
+    const containerWidth = container.clientWidth - 40; // Account for padding
+    const aspectRatio = CANVAS_HEIGHT / CANVAS_WIDTH;
+    
+    // Calculate display size maintaining aspect ratio
+    let displayWidth = containerWidth;
+    let displayHeight = containerWidth * aspectRatio;
+    
+    // If height is too large, scale by height instead
+    if (displayHeight > window.innerHeight * 0.7) {
+        displayHeight = window.innerHeight * 0.7;
+        displayWidth = displayHeight / aspectRatio;
+    }
+    
+    canvas.style.width = displayWidth + 'px';
+    canvas.style.height = displayHeight + 'px';
+}
+
 // Game state
 let gameState = 'start'; // 'start', 'playing', 'paused', 'levelComplete', 'gameOver'
 let score = 0;
@@ -28,6 +56,8 @@ let stars = [];
 
 // Input handling
 const keys = {};
+let mobileLeftPressed = false;
+let mobileRightPressed = false;
 
 // Player class
 class Player {
@@ -57,10 +87,11 @@ class Player {
     }
 
     update() {
-        if (keys['ArrowLeft'] && this.x > 0) {
+        // Support both keyboard and mobile controls
+        if ((keys['ArrowLeft'] || mobileLeftPressed) && this.x > 0) {
             this.x -= this.speed;
         }
-        if (keys['ArrowRight'] && this.x < canvas.width - this.width) {
+        if ((keys['ArrowRight'] || mobileRightPressed) && this.x < canvas.width - this.width) {
             this.x += this.speed;
         }
     }
@@ -386,6 +417,13 @@ function updateUI() {
     if (pauseButton) {
         pauseButton.textContent = isPaused ? '▶️' : '⏸️';
         pauseButton.style.display = gameState === 'playing' ? 'inline-block' : 'none';
+    }
+    
+    // Show/hide mobile controls based on game state and device type
+    const mobileControls = document.getElementById('mobileControls');
+    if (mobileControls) {
+        const isMobile = window.innerWidth <= 768;
+        mobileControls.style.display = (gameState === 'playing' && isMobile) ? 'block' : 'none';
     }
 }
 
@@ -875,6 +913,105 @@ document.getElementById('nextLevelButton').addEventListener('click', startNextLe
 document.getElementById('pauseButton').addEventListener('click', togglePause);
 document.getElementById('musicToggle').addEventListener('click', toggleMusic);
 
+// Mobile control buttons
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const shootBtn = document.getElementById('shootBtn');
+
+// Mobile button event handlers
+if (leftBtn) {
+    leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileLeftPressed = true;
+    });
+    leftBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileLeftPressed = false;
+    });
+    leftBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        mobileLeftPressed = true;
+    });
+    leftBtn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        mobileLeftPressed = false;
+    });
+    leftBtn.addEventListener('mouseleave', () => {
+        mobileLeftPressed = false;
+    });
+}
+
+if (rightBtn) {
+    rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileRightPressed = true;
+    });
+    rightBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileRightPressed = false;
+    });
+    rightBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        mobileRightPressed = true;
+    });
+    rightBtn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        mobileRightPressed = false;
+    });
+    rightBtn.addEventListener('mouseleave', () => {
+        mobileRightPressed = false;
+    });
+}
+
+if (shootBtn) {
+    shootBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState === 'playing' && !isPaused) {
+            player.shoot();
+        }
+    });
+    shootBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (gameState === 'playing' && !isPaused) {
+            player.shoot();
+        }
+    });
+}
+
+// Prevent default touch behaviors
+document.addEventListener('touchmove', (e) => {
+    if (gameState === 'playing') {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('touchstart', (e) => {
+    // Allow touches on buttons and inputs
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+        return;
+    }
+    if (gameState === 'playing') {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Prevent zooming on double tap
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+// Prevent context menu on long press
+document.addEventListener('contextmenu', (e) => {
+    if (gameState === 'playing') {
+        e.preventDefault();
+    }
+});
+
 // Focus name input on page load and initialize pause button
 window.addEventListener('load', () => {
     const nameInput = document.getElementById('playerNameInput');
@@ -887,6 +1024,22 @@ window.addEventListener('load', () => {
     if (pauseButton) {
         pauseButton.style.display = 'none';
     }
+    
+    // Resize canvas on load
+    resizeCanvas();
+});
+
+// Resize canvas on window resize
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    updateUI(); // Update mobile controls visibility
+});
+
+// Resize canvas on orientation change
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        resizeCanvas();
+    }, 100);
 });
 
 // Initialize stars, audio and start game loop

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Space Invaders</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -21,6 +21,15 @@
         
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls" id="mobileControls">
+            <div class="control-row">
+                <button class="control-btn left-btn" id="leftBtn">←</button>
+                <button class="control-btn shoot-btn" id="shootBtn">SHOOT</button>
+                <button class="control-btn right-btn" id="rightBtn">→</button>
+            </div>
+        </div>
+        
         <div class="game-overlay" id="startScreen">
             <div class="overlay-content">
                 <h1>SPACE INVADERS</h1>
@@ -28,9 +37,10 @@
                     <label for="playerNameInput">Enter Your Name:</label>
                     <input type="text" id="playerNameInput" placeholder="Player Name" maxlength="20" autocomplete="off">
                 </div>
-                <p>Use ← → arrow keys to move</p>
-                <p>Press SPACEBAR to shoot</p>
-                <p>Press P to pause</p>
+                <p class="controls-desktop">Use ← → arrow keys to move</p>
+                <p class="controls-desktop">Press SPACEBAR to shoot</p>
+                <p class="controls-desktop">Press P to pause</p>
+                <p class="controls-mobile">Use on-screen buttons to play</p>
                 <button id="startButton">Start Game</button>
             </div>
         </div>
@@ -48,7 +58,8 @@
         <div class="game-overlay hidden" id="pauseScreen">
             <div class="overlay-content">
                 <h1>PAUSED</h1>
-                <p>Press P to resume</p>
+                <p class="controls-desktop">Press P to resume</p>
+                <p class="controls-mobile">Tap Resume button to continue</p>
                 <button id="resumeButton">Resume Game</button>
             </div>
         </div>
